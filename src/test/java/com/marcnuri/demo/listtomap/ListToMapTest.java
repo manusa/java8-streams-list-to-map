@@ -129,8 +129,7 @@ public class ListToMapTest {
 
 		@Bean
 		public RestTemplate restTemplate() {
-			final RestTemplate restTemplate = new RestTemplate();
-			return restTemplate;
+			return new RestTemplate();
 		}
 
 	}
