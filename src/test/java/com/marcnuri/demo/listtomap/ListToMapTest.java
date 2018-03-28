@@ -18,9 +18,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -88,7 +86,7 @@ public class ListToMapTest {
 		fail();
 	}
 
-	@Test()
+	@Test
 	public void listToMapHandleDuplicates_duplicatesList_shouldReturnOk() {
 		// Given
 		final String marcnuriDemoReposUrl = "https://api.github.com/orgs/marcnuri-demo/repos";
@@ -113,6 +111,41 @@ public class ListToMapTest {
 		assertNotNull(currentRepo);
 		assertEquals(newestVersion, currentRepo.getLocalVersion().intValue());
 	}
+
+	@Test
+	public void listToMapSorted_unsortedList_shouldReturnNaturalSortedMap() {
+		// Given
+		final String marcnuriDemoReposUrl = "https://api.github.com/orgs/marcnuri-demo/repos";
+		final List<GithubRepo> repos = restTemplate.exchange( marcnuriDemoReposUrl, HttpMethod.GET,
+				new HttpEntity<>(new HttpHeaders()), new ParameterizedTypeReference<List<GithubRepo>>(){}).getBody();
+
+		// When
+		final SortedMap<String, GithubRepo> repoMap = repos.stream().collect(Collectors.toMap(GithubRepo::getName, Function.identity(),
+				(ghrPrevious, ghrNew) -> ghrNew, TreeMap::new));
+
+		// Then
+		assertFalse(repoMap.isEmpty());
+		assertNotNull(repoMap.get(CURRENT_REPO_NAME));
+		assertTrue(isSorted(repoMap.keySet(), Comparator.naturalOrder()));
+	}
+
+	@Test
+	public void listToMapReverseSorted_unsortedList_shouldReturnReverseSortedMap() {
+		// Given
+		final String marcnuriDemoReposUrl = "https://api.github.com/orgs/marcnuri-demo/repos";
+		final List<GithubRepo> repos = restTemplate.exchange( marcnuriDemoReposUrl, HttpMethod.GET,
+				new HttpEntity<>(new HttpHeaders()), new ParameterizedTypeReference<List<GithubRepo>>(){}).getBody();
+
+		// When
+		final SortedMap<String, GithubRepo> repoMap = repos.stream().collect(Collectors.toMap(GithubRepo::getName, Function.identity(),
+				(ghrPrevious, ghrNew) -> ghrNew,
+				() -> new TreeMap(Comparator.reverseOrder())));
+
+		// Then
+		assertFalse(repoMap.isEmpty());
+		assertNotNull(repoMap.get(CURRENT_REPO_NAME));
+		assertTrue(isSorted(repoMap.keySet(), Comparator.reverseOrder()));
+	}
 //**************************************************************************************************
 //  Getter/Setter Methods
 //**************************************************************************************************
@@ -120,6 +153,18 @@ public class ListToMapTest {
 //**************************************************************************************************
 //  Static Methods
 //**************************************************************************************************
+	private static <T extends Comparable> boolean isSorted(Collection<T> list, Comparator<T> comparator) {
+		boolean ret = true;
+		T previous = null;
+		for (T t: list) {
+			if (previous != null && comparator.compare(previous, t) > 0) {
+				ret = false;
+				break;
+			}
+			previous = t;
+		}
+		return ret;
+	}
 
 //**************************************************************************************************
 //  Inner Classes
