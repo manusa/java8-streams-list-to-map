@@ -5,6 +5,21 @@
  */
 package com.marcnuri.demo.listtomap;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +32,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by Marc Nuri <marc@marcnuri.com> on 2018-03-23.
@@ -139,7 +148,7 @@ public class ListToMapTest {
 		// When
 		final SortedMap<String, GithubRepo> repoMap = repos.stream().collect(Collectors.toMap(GithubRepo::getName, Function.identity(),
 				(ghrPrevious, ghrNew) -> ghrNew,
-				() -> new TreeMap(Comparator.reverseOrder())));
+				() -> new TreeMap<>(Comparator.reverseOrder())));
 
 		// Then
 		assertFalse(repoMap.isEmpty());
